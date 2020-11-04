@@ -18,7 +18,7 @@ public class WebSocketController {
     WebSocketServer webSocketServer;
 
     /**
-     * 群发消息内容
+     * send message
      *
      * @param message
      * @return
@@ -30,10 +30,10 @@ public class WebSocketController {
     }
 
     /**
-     * 指定会话ID发消息
+     * send to specified user
      *
-     * @param message 消息内容
-     * @param userId      连接会话ID
+     * @param message message
+     * @param userId      user
      * @return
      */
     @RequestMapping(value = "/ws/sendOne", method = RequestMethod.GET)
