@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>websocketDemo</title>
+    <style type="text/css">
+        h3,h4{
+            text-align:center;
+        }
+    </style>
+</head>
+<body>
+<h4>
+    ws_example1:[url=/ws/sendOne?message=MsgToSingleUser&id=none][/url]<br>
+    ws_example2:[url=/ws/sendAll?message=MsgToAllUser][/url]
+</h4>
+<div class="row">
+    <div class="col-md-12">
+        <table id="conversation" class="table table-striped">
+            <thead>
+            <tr>
+                <th>Greetings</th>
+            </tr>
+            </thead>
+            <tbody id="greetings">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    function setMessageInnerHTML(sendMessage) {
+        document.getElementById('greetings').innerHTML += sendMessage + '<br/>';
+    }
+
+    var socket;
+    var userId = 123;
+    if (typeof (WebSocket) == "undefined") {
+        console.log("can no useWebSocket");
+    } else {
+        socket = new WebSocket("ws://localhost:8080/websocket/" + userId);
+        //onopen
+        socket.onopen = function() {
+            console.log("Socket connect");
+        };
+        //onmessage , realtime show in browser
+        socket.onmessage = function(msg) {
+            console.log(msg.data);
+            setMessageInnerHTML(msg.data);
+        };
+        //close
+        socket.onclose = function() {
+            console.log("Socket已关闭");
+        };
+        //error
+        socket.onerror = function() {
+            alert("Socket发生了错误");
+        }
+        window.onbeforeunload = function () {
+            closeWebSocket();
+        }
+
+        function closeWebSocket() {
+            socket.close();
+        }
+        /*window.unload=function() {
+            socket.close();
+        };*/
+    }
+</script>
+
+</body>
+</html>
