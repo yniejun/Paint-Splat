@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * redisTemplate
- *
  */
 @Component
 public class RedisUtil {
@@ -21,13 +20,14 @@ public class RedisUtil {
 
     /**
      * set expire time
-     * @param key string
+     *
+     * @param key  string
      * @param time second long
      * @return
      */
-    public boolean expire(String key,long time){
+    public boolean expire(String key, long time) {
         try {
-            if(time>0){
+            if (time > 0) {
                 redisTemplate.expire(key, time, TimeUnit.SECONDS);
             }
             return true;
@@ -39,19 +39,21 @@ public class RedisUtil {
 
     /**
      * get expire time by key
+     *
      * @param key key
      * @return time 0 present never expire
      */
-    public long getExpire(String key){
-        return redisTemplate.getExpire(key,TimeUnit.SECONDS);
+    public long getExpire(String key) {
+        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
 
     /**
      * if exist
+     *
      * @param key
      * @return true false
      */
-    public boolean hasKey(String key){
+    public boolean hasKey(String key) {
         try {
             return redisTemplate.hasKey(key);
         } catch (Exception e) {
@@ -61,15 +63,16 @@ public class RedisUtil {
     }
 
     /**
-     * 删除缓存
-     * @param key 可以传一个值 或多个
+     * delete
+     *
+     * @param key
      */
     @SuppressWarnings("unchecked")
-    public void del(String ... key){
-        if(key!=null&&key.length>0){
-            if(key.length==1){
+    public void del(String... key) {
+        if (key != null && key.length > 0) {
+            if (key.length == 1) {
                 redisTemplate.delete(key[0]);
-            }else{
+            } else {
                 redisTemplate.delete(CollectionUtils.arrayToList(key));
             }
         }
@@ -77,20 +80,33 @@ public class RedisUtil {
 
     /**
      * Get string by key
+     *
      * @param key string
      * @return string
      */
-    public Object get(String key){
-        return key==null?null:redisTemplate.opsForValue().get(key);
+    public Object get(String key) {
+        Object rtn = key == null ? null : redisTemplate.opsForValue().get(key);
+        return rtn;
+    }
+
+    /**
+     * Get string by key
+     *
+     * @param key string
+     * @return string
+     */
+    public Object get(Integer key) {
+        return get(String.valueOf(key));
     }
 
     /**
      * Set string
-     * @param key string
+     *
+     * @param key   string
      * @param value object
      * @return true false
      */
-    public boolean set(String key,Object value) {
+    public boolean set(String key, Object value) {
         try {
             redisTemplate.opsForValue().set(key, value);
             return true;
@@ -100,18 +116,37 @@ public class RedisUtil {
         }
     }
 
+
     /**
-     * Set string and expire time
-     * @param key string
+     * Set string
+     *
+     * @param key   int
      * @param value object
-     * @param time long
      * @return true false
      */
-    public boolean set(String key,Object value,long time){
+    public boolean set(Integer key, Object value) {
         try {
-            if(time>0){
+            redisTemplate.opsForValue().set(String.valueOf(key), value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Set string and expire time
+     *
+     * @param key   string
+     * @param value object
+     * @param time  long
+     * @return true false
+     */
+    public boolean set(String key, Object value, long time) {
+        try {
+            if (time > 0) {
                 redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
-            }else{
+            } else {
                 set(key, value);
             }
             return true;
@@ -121,4 +156,17 @@ public class RedisUtil {
         }
     }
 
+    /**
+     * increment
+     *
+     * @param key string
+     * @param delta string
+     * @return string
+     */
+    public long incr(String key, long delta) {
+        if(delta<0){
+            throw new RuntimeException("delta error");
+        }
+        return redisTemplate.opsForValue().increment(key,delta);
+    }
 }

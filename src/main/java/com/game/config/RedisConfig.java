@@ -16,7 +16,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     /**
-     * retemplate相关配置
+     * redis template
      * @param factory
      * @return
      */
