@@ -20,12 +20,18 @@ public class LobbyController {
     @ResponseBody
     @RequestMapping("/lobby")
     public String index() {
+        HashMap<String, Object> map = new HashMap();
+        boolean gameStatus = redisUtil.hasKey("gameOn");
+        if (gameStatus) {
+            map.put("roundStatus", 1);
+            return new Gson().toJson(map);
+        }
         Game game = new Game(redisUtil);
         int roundId = game.getRoundId();
         int gamer = game.getGamer();
         int seed = game.getSeed(redisUtil);
         int color = Game.color[gamer - 1];
-        HashMap<String, Object> map = new HashMap();
+        map.put("roundStatus", 0);
         map.put("roundId", roundId);
         map.put("userId", roundId * 10 + gamer);
         map.put("seed", seed);

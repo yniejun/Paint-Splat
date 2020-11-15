@@ -1,5 +1,8 @@
 package com.game.service;
 
+import com.game.pojo.Message;
+import com.game.util.RedisUtil;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -8,6 +11,7 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,12 +33,24 @@ public class WebSocketServer {
     @OnOpen
     public void onOpen(@PathParam(value = "userId") String param, Session webSocketSession) {
         userId = param;
-        //log.info("authKey:{}",authKey);
+        HashMap<String, Object> map = new HashMap();
         this.webSocketSession = webSocketSession;
         webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
-        logger.info("join，connect count: {}", cnt);
-        sendMessage(this.webSocketSession, "success");
+        if (cnt < 4) {
+            map.put("eventType", "connect");
+            map.put("gamerNum", cnt);
+            sendMessage(this.webSocketSession, new Gson().toJson(map));
+        } else if (cnt == 4) {
+            //todo set redis game Status gameOn
+            map.put("eventType", "gameStart");
+            map.put("gamerNum", cnt);
+            broadCastInfo(new Gson().toJson(map));
+        } else {
+            logger.info("join，connect count: {}", cnt);
+            map.put("eventType", "close");
+            sendMessage(this.webSocketSession, new Gson().toJson(map));
+        }
     }
 
     /**
@@ -46,6 +62,9 @@ public class WebSocketServer {
             webSocketSet.remove(userId);
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
+            if(cnt == 0){
+                //todo delete redis game status
+            }
         }
     }
 
@@ -56,8 +75,26 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMessage(String message, Session session) {
-        logger.info("receive message：{}",message);
-        sendMessage(session, "received message："+message);
+        Gson gson = new Gson();
+        Message msg = gson.fromJson(message, Message.class);
+        HashMap<String, Object> map = new HashMap();
+        // hit message
+        if (msg.getEventType().equals("Hit")) {
+            boolean isHit = GameService.isHit(msg.getDetail().getLocationX(), msg.getDetail().getLocationY(), msg.getDetail().getSize());
+            // if acceptable hit
+            if (isHit) {
+                map.put("eventType", "HitNeg");
+                sendMessage(session, new Gson().toJson(map));
+            } else {
+                map.put("eventType", "HitPos");
+                map.put("userId", userId);
+                map.put("detail", msg.getDetail().toString());
+                broadCastInfo(new Gson().toJson(map));
+            }
+        }
+        map.put("eventType", "Error");
+        sendMessage(session, new Gson().toJson(map));
+
     }
 
     /**

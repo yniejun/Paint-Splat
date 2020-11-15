@@ -8,19 +8,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class IndexController {
-    private RedisUtil redisUtil;
+//    private final RedisUtil redisUtil;
 
-    public IndexController(RedisUtil redisUtil) {
-        this.redisUtil = redisUtil;
-    }
+//    public IndexController(RedisUtil redisUtil) {
+//        this.redisUtil = redisUtil;
+//    }
 
     @ResponseBody
     @RequestMapping("/index")
     public String index(){
-        boolean a = redisUtil.hasKey("123");
-        if (a){
-            return "111";
-        }
+//        boolean a = RedisUtil.getInstance().set("aaa","bbb");
+//        if (a){
+       //     return "111";
+       // }
         return "222";
     }
 
