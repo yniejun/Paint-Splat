@@ -35,6 +35,11 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         // use json to serialize the value
         template.setValueSerializer(jacksonSeial);
+
+        // hashKeySerializer
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(jacksonSeial);
+        template.afterPropertiesSet();
         return template;
     }
 
@@ -47,6 +52,17 @@ public class RedisConfig {
     @Bean
     public ValueOperations<String, Object> valueOperations(RedisTemplate<String, Object> redisTemplate) {
         return redisTemplate.opsForValue();
+    }
+
+    /**
+     * hash
+     *
+     * @param redisTemplate
+     * @return
+     */
+    @Bean
+    public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForHash();
     }
 
 }

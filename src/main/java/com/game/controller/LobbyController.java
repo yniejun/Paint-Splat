@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class LobbyController {
@@ -21,8 +22,8 @@ public class LobbyController {
     @RequestMapping("/lobby")
     public String index() {
         HashMap<String, Object> map = new HashMap();
-        boolean gameStatus = redisUtil.hasKey("gameOn");
-        if (gameStatus) {
+        Map userName = redisUtil.hmget("userName");
+        if (userName!=null && userName.size() >= 4) {
             map.put("roundStatus", 1);
             return new Gson().toJson(map);
         }

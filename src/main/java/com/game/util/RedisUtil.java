@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -168,5 +169,39 @@ public class RedisUtil {
             throw new RuntimeException("delta error");
         }
         return redisTemplate.opsForValue().increment(key,delta);
+    }
+
+
+    /**
+     * hset
+     *
+     * @param key   key
+     * @param item  item
+     * @param value
+     * @return boolean
+     */
+    public boolean hset(String key, String item, Object value) {
+        try {
+            redisTemplate.opsForHash().put(key, item, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+    /**
+     * hmget
+     * @param key 键
+     * @return map
+     */
+    public Map<Object,Object> hmget(String key){
+        try {
+            return  redisTemplate.opsForHash().entries(key);
+        } catch(Exception e) {
+            return null;
+        }
     }
 }

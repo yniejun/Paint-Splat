@@ -1,5 +1,6 @@
 package com.game.service;
 
+import com.game.pojo.Game;
 import com.game.pojo.Message;
 import com.game.util.RedisUtil;
 import com.google.gson.Gson;
@@ -24,27 +25,36 @@ public class WebSocketServer {
     private static final AtomicInteger OnlineCount = new AtomicInteger(0);
     //concurrent Set，MyWebSocket object for each client, key matches the user
     private static final ConcurrentHashMap<String, WebSocketServer> webSocketSet = new ConcurrentHashMap<>();
+    private final RedisUtil redisUtil;
     private Session webSocketSession;
     private String userId = "";
-
+    private String userName = "";
     private Integer MaxPlayer = 4;
+
+    public WebSocketServer(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
 
     /**
      * connect
-     * */
+     */
     @OnOpen
-    public void onOpen(@PathParam(value = "userId") String param, Session webSocketSession) {
-        userId = param;
+    public void onOpen(@PathParam(value = "userId") String param1, @PathParam(value = "userName") String param2, Session webSocketSession) {
+        userId = param1;
+        userName = param2;
         HashMap<String, Object> map = new HashMap();
         this.webSocketSession = webSocketSession;
-        webSocketSet.put(param, this);
+        webSocketSet.put(param1, this);
         int cnt = OnlineCount.incrementAndGet();
         if (cnt < MaxPlayer) {
             map.put("eventType", "connect");
             map.put("gamerNum", cnt);
+            //set gamer map
+            redisUtil.hset("userName", userId, userName);
             sendMessage(this.webSocketSession, new Gson().toJson(map));
         } else if (cnt == MaxPlayer) {
-            //todo set redis game Status gameOn
+            redisUtil.hset("userName", userName, Game.color[cnt]);
+            map.put("userName",redisUtil.hmget("userName"));
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
             broadCastInfo(new Gson().toJson(map));
@@ -60,12 +70,12 @@ public class WebSocketServer {
      */
     @OnClose
     public void onClose() {
-        if (!userId.equals("")){
+        if (!userId.equals("")) {
             webSocketSet.remove(userId);
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
-            if(cnt == 0){
-                //todo delete redis game status
+            if (cnt == 0) {
+                redisUtil.del("userName");
             }
         }
     }
@@ -93,7 +103,7 @@ public class WebSocketServer {
                 map.put("detail", msg.getDetail());
                 broadCastInfo(new Gson().toJson(map));
             }
-        }else {
+        } else {
             map.put("eventType", "Error");
             sendMessage(session, new Gson().toJson(map));
         }
@@ -102,23 +112,25 @@ public class WebSocketServer {
 
     /**
      * error
+     *
      * @param session session
-     * @param error error
+     * @param error   error
      */
     @OnError
     public void onError(Session session, Throwable error) {
-        logger.error("error：{}，Session ID： {}",error.getMessage(),session.getId());
+        logger.error("error：{}，Session ID： {}", error.getMessage(), session.getId());
         error.printStackTrace();
     }
 
     /**
      * sendMessage
+     *
      * @param session session
      * @param message message
      */
     public void sendMessage(Session session, String message) {
         try {
-            session.getBasicRemote().sendText(String.format("%s (From Server，Session ID=%s)",message,session.getId()));
+            session.getBasicRemote().sendText(String.format("%s (From Server，Session ID=%s)", message, session.getId()));
             //session.getBasicRemote().sendText(String.format("%s",message));
         } catch (IOException e) {
             logger.error("send error：{}", e.getMessage());
@@ -128,12 +140,13 @@ public class WebSocketServer {
 
     /**
      * broadCast
+     *
      * @param message broadCast message
      */
     public void broadCastInfo(String message) {
         for (String key : webSocketSet.keySet()) {
             Session session = webSocketSet.get(key).webSocketSession;
-            if(session != null && session.isOpen()){
+            if (session != null && session.isOpen()) {
                 sendMessage(session, message);
             }
         }
@@ -141,15 +154,15 @@ public class WebSocketServer {
 
     /**
      * send message to specified user
+     *
      * @param message message
      */
     public void sendToUser(String userId, String message) {
         WebSocketServer webSocketServer = webSocketSet.get(userId);
-        if ( webSocketServer != null && webSocketServer.webSocketSession.isOpen()){
+        if (webSocketServer != null && webSocketServer.webSocketSession.isOpen()) {
             sendMessage(webSocketServer.webSocketSession, message);
-        }
-        else{
-            logger.warn("can not connect with specified session：{}",userId);
+        } else {
+            logger.warn("can not connect with specified session：{}", userId);
         }
     }
 }
