@@ -27,6 +27,8 @@ public class WebSocketServer {
     private Session webSocketSession;
     private String userId = "";
 
+    private Integer MaxPlayer = 4;
+
     /**
      * connect
      * */
@@ -37,11 +39,11 @@ public class WebSocketServer {
         this.webSocketSession = webSocketSession;
         webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
-        if (cnt < 4) {
+        if (cnt < MaxPlayer) {
             map.put("eventType", "connect");
             map.put("gamerNum", cnt);
             sendMessage(this.webSocketSession, new Gson().toJson(map));
-        } else if (cnt == 4) {
+        } else if (cnt == MaxPlayer) {
             //todo set redis game Status gameOn
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
@@ -82,18 +84,19 @@ public class WebSocketServer {
         if (msg.getEventType().equals("Hit")) {
             boolean isHit = GameService.isHit(msg.getDetail().getLocationX(), msg.getDetail().getLocationY(), msg.getDetail().getSize());
             // if acceptable hit
-            if (isHit) {
+            if (!isHit) {
                 map.put("eventType", "HitNeg");
                 sendMessage(session, new Gson().toJson(map));
             } else {
                 map.put("eventType", "HitPos");
                 map.put("userId", userId);
-                map.put("detail", msg.getDetail().toString());
+                map.put("detail", msg.getDetail());
                 broadCastInfo(new Gson().toJson(map));
             }
+        }else {
+            map.put("eventType", "Error");
+            sendMessage(session, new Gson().toJson(map));
         }
-        map.put("eventType", "Error");
-        sendMessage(session, new Gson().toJson(map));
 
     }
 
@@ -130,7 +133,7 @@ public class WebSocketServer {
     public void broadCastInfo(String message) {
         for (String key : webSocketSet.keySet()) {
             Session session = webSocketSet.get(key).webSocketSession;
-            if(session != null && session.isOpen() && !userId.equals(key)){
+            if(session != null && session.isOpen()){
                 sendMessage(session, message);
             }
         }
