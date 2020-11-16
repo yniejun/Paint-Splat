@@ -13,6 +13,8 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +46,7 @@ public class WebSocketServer {
         webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
         logger.info("join，connect count: {}", cnt);
-        redisTemplate = (RedisTemplate<String, Object>) SpringUtils.getBean("redisTemplate");;
+        redisTemplate = (RedisTemplate<String, Object>) SpringUtils.getBean("redisTemplate");
         if (cnt < MaxPlayer) {
             map.put("eventType", "connect");
             map.put("gamerNum", cnt);
@@ -57,6 +59,7 @@ public class WebSocketServer {
             map.put("userName",redisTemplate.opsForHash().entries("userName"));
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
+            gameTimer();
             broadCastInfo(new Gson().toJson(map));
         } else {
             map.put("eventType", "close");
@@ -71,6 +74,7 @@ public class WebSocketServer {
     public void onClose() {
         if (!userId.equals("")) {
             webSocketSet.remove(userId);
+            redisTemplate.delete(userName);
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
             if (cnt == 0) {
@@ -97,6 +101,7 @@ public class WebSocketServer {
                 map.put("eventType", "HitNeg");
                 sendMessage(session, new Gson().toJson(map));
             } else {
+                redisTemplate.opsForHash().increment("userScore", userName, 1);
                 map.put("eventType", "HitPos");
                 map.put("userId", userId);
                 map.put("detail", msg.getDetail());
@@ -164,5 +169,18 @@ public class WebSocketServer {
             logger.warn("can not connect with specified session：{}", userId);
         }
     }
+
+    public void gameTimer() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                HashMap<String, Object> map = new HashMap();
+                map.put("eventType", "gameOver");
+                map.put("score", redisTemplate.opsForHash().entries("userScore"));
+                broadCastInfo(new Gson().toJson(map));
+            }
+        }, 60000);
+    }
+
 }
 
