@@ -32,8 +32,9 @@ public class Game {
         } else {
             //first game round :set round set 1 gamer
             this.roundId = 1;
+            this.gamer = 1;
             redisUtil.set(game, roundId);
-            redisUtil.set(roundId, 1, 2 * 60 * 60);
+            redisUtil.set(roundId, gamer, 2 * 60 * 60);
             //set random seed
             setSeed(redisUtil);
         }
