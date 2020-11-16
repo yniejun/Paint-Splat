@@ -181,7 +181,7 @@ public class WebSocketServer {
                 broadCastInfo(new Gson().toJson(map));
                 gameClean();
             }
-        }, 60000);
+        }, 30000);
     }
 
     public void gameClean(){
