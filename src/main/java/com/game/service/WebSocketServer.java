@@ -76,6 +76,9 @@ public class WebSocketServer {
             redisTemplate.delete(userName);
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
+            if (cnt == 0) {
+                gameClean();
+            }
         }
     }
 
@@ -174,11 +177,15 @@ public class WebSocketServer {
                 map.put("eventType", "gameOver");
                 map.put("score", redisTemplate.opsForHash().entries("userScore"));
                 broadCastInfo(new Gson().toJson(map));
-                redisTemplate.delete("userName");
-                redisTemplate.delete("userScore");
-                redisTemplate.delete("hitRecord");
+                gameClean();
             }
         }, 60000);
+    }
+
+    public void gameClean(){
+        redisTemplate.delete("userName");
+        redisTemplate.delete("userScore");
+        redisTemplate.delete("hitRecord");
     }
 
 }
