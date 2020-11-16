@@ -15,8 +15,8 @@ public class GameService {
                 double xExist = Double.parseDouble((String) entry.getKey());
                 double yExist = Double.parseDouble((String) entry.getValue());
                 double len = calculateDis(x, y, xExist, yExist);
-                if (len < 2 * R) {
-                    System.out.println("location：" + x + "," + y + "   len:" + len + "   2R:" + 2 * R);
+                if (len < 2 * (R + 1)) {
+                    System.out.println("location：" + x + "," + y + "   len:" + len + "   2R:" + 2 * (R + 1));
                     return false;
                 }
             }
