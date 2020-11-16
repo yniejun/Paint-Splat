@@ -119,36 +119,19 @@ public class RedisUtil {
 
 
     /**
-     * Set string
-     *
-     * @param key   int
-     * @param value object
-     * @return true false
-     */
-    public boolean set(Integer key, Object value) {
-        try {
-            redisTemplate.opsForValue().set(String.valueOf(key), value);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
      * Set string and expire time
      *
-     * @param key   string
+     * @param key   int
      * @param value object
      * @param time  long
      * @return true false
      */
-    public boolean set(String key, Object value, long time) {
+    public boolean set(Integer key, Object value, long time) {
         try {
             if (time > 0) {
-                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+                redisTemplate.opsForValue().set(String.valueOf(key), value, time, TimeUnit.SECONDS);
             } else {
-                set(key, value);
+                set(String.valueOf(key), value);
             }
             return true;
         } catch (Exception e) {

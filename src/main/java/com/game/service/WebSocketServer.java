@@ -1,6 +1,5 @@
 package com.game.service;
 
-import com.game.pojo.Game;
 import com.game.pojo.Message;
 import com.game.util.SpringUtils;
 import com.google.gson.Gson;
@@ -51,8 +50,8 @@ public class WebSocketServer {
             map.put("eventType", "connect");
             map.put("gamerNum", cnt);
             //set gamer map
-            System.out.println("redisTemplate " + redisTemplate);
             redisTemplate.opsForHash().put("userName", userId, userName);
+            redisTemplate.opsForHash().put("userScore", userName, 0);
             sendMessage(this.webSocketSession, new Gson().toJson(map));
         } else if (cnt == MaxPlayer) {
             redisTemplate.opsForHash().put("userName", userId, userName);
@@ -79,6 +78,8 @@ public class WebSocketServer {
             logger.info("connect close，connect count: {}", cnt);
             if (cnt == 0) {
                 redisTemplate.delete("userName");
+                redisTemplate.delete("userScore");
+                redisTemplate.delete("hitRecord");
             }
         }
     }
@@ -95,7 +96,7 @@ public class WebSocketServer {
         HashMap<String, Object> map = new HashMap();
         // hit message
         if (msg.getEventType().equals("Hit")) {
-            boolean isHit = GameService.isHit(msg.getDetail().getLocationX(), msg.getDetail().getLocationY(), msg.getDetail().getSize());
+            boolean isHit = GameService.isHit(msg.getDetail().getLocationX(), msg.getDetail().getLocationY(), msg.getDetail().getSize(), redisTemplate);
             // if acceptable hit
             if (!isHit) {
                 map.put("eventType", "HitNeg");

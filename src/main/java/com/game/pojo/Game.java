@@ -15,25 +15,25 @@ public class Game {
         boolean hasGame = redisUtil.hasKey(game);
         if (hasGame) {
             this.roundId = (Integer) redisUtil.get(game);
-            this.gamer = (Integer) redisUtil.get(this.roundId);
+            this.gamer = redisUtil.get(this.roundId) == null ? 4 : (Integer) redisUtil.get(this.roundId);
             // got the round num
             // search the gamer num
             if (this.gamer < 4) {// don't have 4 gamer
                 this.gamer++;
-                redisUtil.set(this.roundId, gamer);
+                redisUtil.set(this.roundId, gamer, 2 * 60 * 60);
             } else {
                 //open new round
                 this.roundId++;
                 this.gamer = 1;
                 redisUtil.set(game, roundId);
-                redisUtil.set(this.roundId, gamer);
+                redisUtil.set(this.roundId, gamer, 2 * 60 * 60);
                 setSeed(redisUtil);
             }
         } else {
             //first game round :set round set 1 gamer
             this.roundId = 1;
             redisUtil.set(game, roundId);
-            redisUtil.set(roundId, 1);
+            redisUtil.set(roundId, 1, 2 * 60 * 60);
             //set random seed
             setSeed(redisUtil);
         }

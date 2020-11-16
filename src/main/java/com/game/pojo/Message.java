@@ -31,23 +31,23 @@ public class Message {
          */
 
         @SerializedName("LocationX")
-        private Integer LocationX;
+        private Double LocationX;
         @SerializedName("LocationY")
-        private Integer LocationY;
+        private Double LocationY;
         @SerializedName("Size")
-        private Integer Size;
+        private Double Size;
         @SerializedName("ID")
         private Integer ID;
 
-        public Integer getLocationX() {
+        public Double getLocationX() {
             return LocationX;
         }
 
-        public Integer getLocationY() {
+        public Double getLocationY() {
             return LocationY;
         }
 
-        public Integer getSize() {
+        public Double getSize() {
             return Size;
         }
 
