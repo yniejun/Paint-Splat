@@ -44,7 +44,7 @@ public class WebSocketServer {
         this.webSocketSession = webSocketSession;
         webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
-        logger.info("join，connect count: {}", cnt);
+        logger.info("{} join connect", userName);
         redisTemplate = (RedisTemplate<String, Object>) SpringUtils.getBean("redisTemplate");
         if (cnt < MaxPlayer) {
             map.put("eventType", "connect");
@@ -76,6 +76,7 @@ public class WebSocketServer {
             redisTemplate.delete(userName);
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
+            logger.info("{} close connect", userName);
             if (cnt == 0) {
                 gameClean();
             }
