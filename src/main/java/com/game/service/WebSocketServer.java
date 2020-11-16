@@ -55,7 +55,7 @@ public class WebSocketServer {
             redisTemplate.opsForHash().put("userName", userId, userName);
             sendMessage(this.webSocketSession, new Gson().toJson(map));
         } else if (cnt == MaxPlayer) {
-            redisTemplate.opsForHash().put("userName", userName, Game.color[cnt]);
+            redisTemplate.opsForHash().put("userName", userId, userName);
             map.put("userName",redisTemplate.opsForHash().entries("userName"));
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
