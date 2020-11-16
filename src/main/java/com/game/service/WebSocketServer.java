@@ -44,6 +44,7 @@ public class WebSocketServer {
         this.webSocketSession = webSocketSession;
         webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
+        logger.info("join connect，connect count: {}", cnt);
         logger.info("{} join connect", userName);
         redisTemplate = (RedisTemplate<String, Object>) SpringUtils.getBean("redisTemplate");
         if (cnt < MaxPlayer) {
