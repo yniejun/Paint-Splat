@@ -2,12 +2,12 @@ package com.game.service;
 
 import com.game.pojo.Game;
 import com.game.pojo.Message;
-import com.game.util.RedisUtil;
+import com.game.util.SpringUtils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -25,41 +25,40 @@ public class WebSocketServer {
     private static final AtomicInteger OnlineCount = new AtomicInteger(0);
     //concurrent Set，MyWebSocket object for each client, key matches the user
     private static final ConcurrentHashMap<String, WebSocketServer> webSocketSet = new ConcurrentHashMap<>();
-    private final RedisUtil redisUtil;
     private Session webSocketSession;
     private String userId = "";
     private String userName = "";
     private Integer MaxPlayer = 4;
-
-    public WebSocketServer(RedisUtil redisUtil) {
-        this.redisUtil = redisUtil;
-    }
+    RedisTemplate<String, Object> redisTemplate = null;
 
     /**
      * connect
-     */
+     * */
     @OnOpen
-    public void onOpen(@PathParam(value = "userId") String param1, @PathParam(value = "userName") String param2, Session webSocketSession) {
-        userId = param1;
-        userName = param2;
+    public void onOpen(@PathParam(value = "userId") String param, Session webSocketSession) {
+        String[] strArr = param.split("-");
+        userId = strArr[0];
+        userName = strArr[1];
         HashMap<String, Object> map = new HashMap();
         this.webSocketSession = webSocketSession;
-        webSocketSet.put(param1, this);
+        webSocketSet.put(param, this);
         int cnt = OnlineCount.incrementAndGet();
+        logger.info("join，connect count: {}", cnt);
+        redisTemplate = (RedisTemplate<String, Object>) SpringUtils.getBean("redisTemplate");;
         if (cnt < MaxPlayer) {
             map.put("eventType", "connect");
             map.put("gamerNum", cnt);
             //set gamer map
-            redisUtil.hset("userName", userId, userName);
+            System.out.println("redisTemplate " + redisTemplate);
+            redisTemplate.opsForHash().put("userName", userId, userName);
             sendMessage(this.webSocketSession, new Gson().toJson(map));
         } else if (cnt == MaxPlayer) {
-            redisUtil.hset("userName", userName, Game.color[cnt]);
-            map.put("userName",redisUtil.hmget("userName"));
+            redisTemplate.opsForHash().put("userName", userName, Game.color[cnt]);
+            map.put("userName",redisTemplate.opsForHash().entries("userName"));
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
             broadCastInfo(new Gson().toJson(map));
         } else {
-            logger.info("join，connect count: {}", cnt);
             map.put("eventType", "close");
             sendMessage(this.webSocketSession, new Gson().toJson(map));
         }
@@ -75,7 +74,7 @@ public class WebSocketServer {
             int cnt = OnlineCount.decrementAndGet();
             logger.info("connect close，connect count: {}", cnt);
             if (cnt == 0) {
-                redisUtil.del("userName");
+                redisTemplate.delete("userName");
             }
         }
     }

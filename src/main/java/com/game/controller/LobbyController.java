@@ -7,16 +7,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
 @Controller
 public class LobbyController {
-    private final RedisUtil redisUtil;
-
-    public LobbyController(RedisUtil redisUtil) {
-        this.redisUtil = redisUtil;
-    }
+    @Resource
+    private RedisUtil redisUtil;
 
     @ResponseBody
     @RequestMapping("/lobby")
