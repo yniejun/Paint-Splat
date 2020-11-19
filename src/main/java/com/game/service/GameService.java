@@ -1,8 +1,12 @@
 package com.game.service;
 
+import com.google.gson.Gson;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GameService {
     private final static String hitRecord = "hitRecord";

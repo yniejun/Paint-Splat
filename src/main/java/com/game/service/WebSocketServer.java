@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -59,7 +60,7 @@ public class WebSocketServer {
             map.put("userName",redisTemplate.opsForHash().entries("userName"));
             map.put("eventType", "gameStart");
             map.put("gamerNum", cnt);
-            gameTimer();
+            timer();
             broadCastInfo(new Gson().toJson(map));
         } else {
             map.put("eventType", "close");
@@ -79,7 +80,7 @@ public class WebSocketServer {
             logger.info("connect close，connect count: {}", cnt);
             logger.info("{} close connect", userName);
             if (cnt == 0) {
-                gameClean();
+                clean();
             }
         }
     }
@@ -171,7 +172,7 @@ public class WebSocketServer {
         }
     }
 
-    public void gameTimer() {
+    private void timer() {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
@@ -179,12 +180,12 @@ public class WebSocketServer {
                 map.put("eventType", "gameOver");
                 map.put("score", redisTemplate.opsForHash().entries("userScore"));
                 broadCastInfo(new Gson().toJson(map));
-                gameClean();
+                clean();
             }
         }, 30000);
     }
 
-    public void gameClean(){
+    private void clean(){
         redisTemplate.delete("userName");
         redisTemplate.delete("userScore");
         redisTemplate.delete("hitRecord");
